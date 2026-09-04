@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AI Trading XAUUSD{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <span class="brand">🪙 AI Trading XAUUSD</span>
+    <span class="links">
+      <a href="/">Beranda</a>
+      {% if user %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Keluar ({{ user }})</a>
+      {% else %}
+        <a href="/login">Masuk</a>
+        <a href="/register">Daftar</a>
+      {% endif %}
+    </span>
+  </nav>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

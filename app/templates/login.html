@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Masuk — AI Trading XAUUSD{% endblock %}
+{% block content %}
+<div class="container" style="max-width:420px">
+  <div class="card">
+    <h2>Masuk</h2>
+    {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+    <form method="post" action="/login">
+      <label>Username</label>
+      <input type="text" name="username" required autofocus>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <div style="margin-top:20px">
+        <button class="btn block" type="submit">Masuk</button>
+      </div>
+    </form>
+    <p class="muted" style="margin-top:16px;text-align:center">
+      Belum punya akun? <a href="/register">Daftar gratis</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

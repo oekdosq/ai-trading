@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Daftar — AI Trading XAUUSD{% endblock %}
+{% block content %}
+<div class="container" style="max-width:420px">
+  <div class="card">
+    <h2>Daftar Akun</h2>
+    {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+    <form method="post" action="/register">
+      <label>Username</label>
+      <input type="text" name="username" required autofocus>
+      <label>Password</label>
+      <input type="password" name="password" required>
+      <div style="margin-top:20px">
+        <button class="btn block" type="submit">Daftar</button>
+      </div>
+    </form>
+    <p class="muted" style="margin-top:16px;text-align:center">
+      Sudah punya akun? <a href="/login">Masuk</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

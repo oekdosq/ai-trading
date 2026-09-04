@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}AI Trading XAUUSD{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>Bot Sinyal XAUUSD<br>berbasis Smart Money Concept</h1>
+  <p>
+    Analisis struktur market (swing, BOS/CHoCH, IDM, BSL/SSL, Turtle Soup) untuk
+    menghasilkan sinyal beli/jual/tahan. Disediakan sebagai <b>rekomendasi</b> —
+    Anda yang mengeksekusi. Bukan jaminan profit.
+  </p>
+  {% if user %}
+    <a class="btn" href="/dashboard">Buka Dashboard</a>
+  {% else %}
+    <div class="row" style="justify-content:center">
+      <a class="btn" href="/register">Daftar Gratis</a>
+      <span style="color:var(--muted)">atau</span>
+      <a class="btn ghost" href="/login">Masuk</a>
+    </div>
+  {% endif %}
+</div>
+
+<div class="container">
+  <div class="card">
+    <h2>Cara kerja</h2>
+    <p class="muted">
+      Data dibaca → struktur pasar diekstrak → AI menganalisis → sinyal
+      (action, entry, stop-loss, take-profit, alasan) dalam Bahasa Indonesia.
+      Setiap sinyal bisa langsung disalin & dieksekusi manual di broker Anda.
+    </p>
+    <p class="muted" style="font-size:13px">
+      ⚠️ Hanya alat analisis. Risiko trading sepenuhnya tanggung jawab Anda.
+      Gunakan akun demo terlebih dahulu.
+    </p>
+  </div>
+</div>
+{% endblock %}

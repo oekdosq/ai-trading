@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AI Trading XAUUSD{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="row" style="justify-content:space-between;margin-bottom:18px">
+    <h1 style="margin:0">Dashboard — {{ user }}</h1>
+    <span class="badge hold">Semi-otomatis</span>
+  </div>
+
+  {% if info %}<div class="alert info">{{ info }}</div>{% endif %}
+  {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
+
+  <div class="card">
+    <h2>Analisis Sinyal</h2>
+    <p class="muted">Jalankan analisis struktur + AI. Hasil disimpan ke riwayat Anda di bawah.</p>
+    <div style="margin-top:16px">
+      <form method="post" action="/analyze">
+        <input type="hidden" name="mode" value="demo">
+        <button class="btn block" type="submit">🚀 Analisis Sekarang (Demo)</button>
+      </form>
+      <p class="muted" style="font-size:13px;margin-top:8px">
+        Mode <b>demo</b> memakai data sintetis (gratis, tanpa OANDA/Ollama) —
+        cocok untuk melihat cara kerja. Mode live otomatis dipakai bila kredensial
+        server sudah diisi.
+      </p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Riwayat Sinyal</h2>
+    {% if signals %}
+    <table>
+      <thead>
+        <tr>
+          <th>Waktu</th>
+          <th>Aksi</th>
+          <th>Conf</th>
+          <th>Entry</th>
+          <th>SL</th>
+          <th>TP</th>
+          <th>Mode</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in signals %}
+        <tr>
+          <td>{{ s.created_at[:16].replace('T', ' ') }}</td>
+          <td>
+            <span class="badge {{ s.action }}">{{ s.action|upper }}</span>
+            {% if s.bias %}<span class="key">{{ s.bias }}</span>{% endif %}
+          </td>
+          <td>{{ s.confidence if s.confidence is not none else '-' }}</td>
+          <td>{{ s.entry if s.entry is not none else '-' }}</td>
+          <td>{{ s.stop_loss if s.stop_loss is not none else '-' }}</td>
+          <td>{{ s.take_profit if s.take_profit is not none else '-' }}</td>
+          <td><span class="key">{{ s.mode }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty">Belum ada sinyal. Klik "Analisis Sekarang" untuk mulai.</div>
+    {% endif %}
+  </div>
+
+  <p class="muted" style="font-size:12px;text-align:center">
+    ⚠️ Hanya rekomendasi analisis, bukan nasihat keuangan. Bukan jaminan profit.
+    Trading berisiko tinggi.
+  </p>
+</div>
+{% endblock %}

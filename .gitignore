@@ -1,0 +1,9 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+data.db
+signals/*
+out/*
+!signals/.gitkeep
+!out/.gitkeep
