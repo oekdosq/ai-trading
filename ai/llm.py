@@ -58,12 +58,13 @@ class LlmClient:
         system: str,
         user: str,
         temperature: float = 0.2,
-        max_tokens: int = 700,
+        max_tokens: int | None = None,
         retries: int = 2,
     ) -> LlmResult:
         """Panggil model dan kembalikan hasil. Raise LlmUnavailable bila offline."""
         import requests
 
+        max_tokens = max_tokens or config.OLLAMA_MAX_TOKENS
         if not self._available():
             raise LlmUnavailable(
                 f"Ollama tidak berjalan di {self.host}. Jalankan `ollama serve` "
@@ -81,9 +82,10 @@ class LlmClient:
                         {"role": "user", "content": user},
                     ],
                     "stream": False,
+                    "think": config.OLLAMA_THINK,
                     "options": {"temperature": temperature, "num_predict": max_tokens},
                 }
-                r = requests.post(url, json=body, timeout=120)
+                r = requests.post(url, json=body, timeout=config.OLLAMA_TIMEOUT)
                 r.raise_for_status()
                 data = r.json()
                 content = data.get("message", {}).get("content", "")

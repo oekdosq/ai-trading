@@ -28,6 +28,11 @@ class Config:
     # LLM lokal (Ollama)
     OLLAMA_MODEL: str = _get("OLLAMA_MODEL", "qwen3:8b")
     OLLAMA_HOST: str = _get("OLLAMA_HOST", "http://localhost:11434")
+    OLLAMA_TIMEOUT: float = float(_get("OLLAMA_TIMEOUT", "300"))
+    OLLAMA_MAX_TOKENS: int = int(_get("OLLAMA_MAX_TOKENS", "700"))
+    # qwen3: true mengaktifkan mode berpikir (lambat, output lebih verbose);
+    # false (default) = jawaban langsung, cocok utk sinyal terstruktur.
+    OLLAMA_THINK: bool = _get("OLLAMA_THINK", "false").lower() in ("1", "true", "yes")
 
     # Instrumen & timeframe default
     INSTRUMENT: str = _get("INSTRUMENT", "XAU_USD")
