@@ -93,7 +93,7 @@ sudo apt-get install -y python3 python3-venv python3-pip git nginx
 ```bash
 # (opsional) clone repo — atau scp folder ai-trading ke server
 cd ~
-git clone <url-repo-ai-trading>   # mis. atau: scp -r ai-trading ubuntu@IP:~/
+git clone https://github.com/oekdosq/ai-trading.git   # (atau pakai scp -r ai-trading ubuntu@IP:~/)
 cd ai-trading
 
 python3 -m venv .venv
