@@ -93,7 +93,7 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
                     entry_tf=entry_tf,
                 )
             result["mode"] = "real"
-            result["source"] = "Dukascopy/Yahoo (chart asli, gratis)"
+            result["source"] = "TradingView/Dukascopy (chart asli, gratis)"
             return result
         except FreeDataError as e:
             try:

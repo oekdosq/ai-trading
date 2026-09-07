@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import socket
 import struct
 import time
 import urllib.request
@@ -35,6 +36,19 @@ _FILE = {
 _UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"}
 
 _PRICE_SCALE = 1e-5
+
+
+
+def _preflight(host: str = "datafeed.dukascopy.com", timeout: float = 2.0) -> None:
+    """Cek cepat apakah TCP ke host Dukascopy menjangkau; kalau tidak -> abort cepat."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(timeout)
+    try:
+        sock.connect((host, 443))
+    except OSError as e:
+        raise FreeDataError(f"Dukascopy tak terjangkau dari IP ini ({e.strerror or e})") from e
+    finally:
+        sock.close()
 
 _cache: dict[str, tuple[float, pd.DataFrame]] = {}
 _HOLD = {"M5": 60, "M15": 120, "H1": 300, "H4": 600, "D": 1800, "W": 3600}
@@ -96,7 +110,7 @@ def _bi5_url(y: int, m0: int, d: int, frame: str) -> str:
 
 def _fetch_day(y: int, m0: int, d: int, frame: str) -> pd.DataFrame:
     req = urllib.request.Request(_bi5_url(y, m0, d, frame), headers=_UA)
-    with urllib.request.urlopen(req, timeout=25) as resp:
+    with urllib.request.urlopen(req, timeout=8) as resp:
         raw = resp.read()
 
     if len(raw) < 20:
@@ -192,25 +206,32 @@ def free_client_fetch(
     granularity: str = "H1",
     count: int = 200,
 ) -> pd.DataFrame:
-    """Padanan `OandaClient.fetch_candles` — data NYATA gratis dari Dukascopy."""
+    """Padanan `OandaClient.fetch_candles` — data NYATA gratis.
+
+    Urutan coba: TradingView (best-effort) -> Dukascopy. Semua gagal ->
+    FreeDataError (real mode menampilkan error jujur + harga spot).
+    """
     tf = _tf(granularity)
     if tf not in _FILE:
         raise UnsupportedTimeframeError(f"Timeframe tidak didukung: {tf}")
-
-    # H4 via H1 tidak tersedia langsung di _dates_needed (tf=H4), minta cukup
-    base_tf = tf
-    if tf == "H4":
-        pass  # _FILE["H4"] = hourly; kombinasikan lalu resample
-    if tf == "D":
-        base_tf = "D"
-    if tf == "W":
-        base_tf = "W"
 
     key = f"{instrument}:{tf}:{count}"
     cached = _cache.get(key)
     if cached and time.time() - cached[0] < _HOLD.get(tf, 120):
         return cached[1].copy()
 
-    df = _combine(base_tf, count)
+    # 1) TradingView (preferensi user)
+    try:
+        from data.tradingview import tradingview_client_fetch
+
+        df = tradingview_client_fetch(instrument, tf, count)
+        _cache[key] = (time.time(), df)
+        return df
+    except (FreeDataError, OSError, ValueError) as e:
+        print(f"  [free] TradingView gagal: {e}")
+
+    # 2) Dukascopy (fallback biner publik)
+    _preflight()
+    df = _combine(tf, count)
     _cache[key] = (time.time(), df)
     return df
