@@ -143,4 +143,16 @@ def do_analyze(request: Request, mode: str = Form("demo")):
 # ---------- API (opsional, JSON) ----------
 @app.get("/api/signal")
 def api_signal(mode: str = "demo"):
+    mode = mode if mode in ("demo", "real", "live") else "demo"
     return analyze(mode=mode)
+
+
+@app.get("/api/price")
+def api_price():
+    """Harga spot XAU/USD nyata (gratis, tanpa akun)."""
+    try:
+        from data.free import free_spot
+
+        return {"ok": True, **free_spot()}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "errors": [f"Harga tidak tersedia: {e}"]}
