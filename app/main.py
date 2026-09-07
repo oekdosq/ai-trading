@@ -142,5 +142,5 @@ def do_analyze(request: Request, mode: str = Form("demo")):
 
 # ---------- API (opsional, JSON) ----------
 @app.get("/api/signal")
-def api_signal():
-    return analyze(mode="demo")
+def api_signal(mode: str = "demo"):
+    return analyze(mode=mode)
