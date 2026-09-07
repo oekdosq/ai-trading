@@ -1,11 +1,10 @@
 """Menjalankan pipeline trading dari web app.
 
 mode='demo'  -> data sintetis + fallback rule-based (gratis, tanpa OANDA/Ollama)
-mode='real'  -> candle XAU/USD NYATA sumber gratis (Dukascopy/Yahoo bila IP
-                mengizinkan). Jika riwayat tak tersedia, error jujur + harga
-                spot asli.
-mode='live'  -> OANDA (praktik) + Ollama; butuh .env terisi, jika tidak akan
-                otomatis jatuh (fallback) ke rule-based dengan peringatan.
+mode='real'  -> candle XAU/USD NYATA sumber gratis: TradingView -> Dukascopy
+                (primary; bila IP diblokir, error jujur + harga spot asli).
+mode='live'  -> OANDA (praktik)+Ollama bila .env terisi; tanpa itu otomatis
+                memakai rantai TradingView gratis (pengganti OANDA).
 """
 from __future__ import annotations
 
@@ -39,6 +38,7 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
     bias_tf = config.TIMEFRAME_BIAS
     entry_tf = config.TIMEFRAME_ENTRY
 
+    oanda_failed_reason: str | None = None
     if mode == "live" and config.has_oanda:
         try:
             from data.oanda import OandaClient, OandaError
@@ -65,15 +65,16 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
                 sig.errors = [f"LLM tidak tersedia: {e} → fallback rule-based."]
             result = signal_to_dict(sig)
             result["mode"] = "live"
+            result["source"] = "OANDA (akun nyata, premium)"
             return result
         except OandaError as e:
-            # fallback ke demo
-            pass
+            oanda_failed_reason = str(e)
+            print(f"  [live] OANDA gagal → lanjut rantai TradingView: {e}")
         except Exception as e:  # noqa: BLE001
             result = {"ok": False, "errors": [f"Live gagal: {e}"], "mode": "live"}
             return result
 
-    if mode == "real":
+    if mode in ("real", "live"):
         try:
             from data.free import free_client_fetch, free_spot, FreeDataError
 
@@ -92,8 +93,22 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
                     entry_df=entry_df,
                     entry_tf=entry_tf,
                 )
-            result["mode"] = "real"
-            result["source"] = "TradingView/Dukascopy (chart asli, gratis)"
+            result["mode"] = mode
+            result["source"] = (
+                "TradingView/Dukascopy (chart asli, gratis)"
+                if mode == "real"
+                else "TradingView (gratis, tanpa OANDA — mode live premium nonaktif)"
+            )
+            if mode == "live":
+                if not config.has_oanda:
+                    result["warning"] = (
+                        "OANDA tidak dikonfigurasi (.env) — mode live memakai rantai "
+                        "TradingView gratis sebagai gantinya."
+                    )
+                elif oanda_failed_reason:
+                    result["warning"] = (
+                        f"OANDA gagal ({oanda_failed_reason}) — diganti TradingView gratis."
+                    )
             return result
         except FreeDataError as e:
             try:
@@ -102,10 +117,10 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
                 spot = None
             return {
                 "ok": False,
-                "mode": "real",
+                "mode": mode,
                 "errors": [
                     f"Riwayat candle intraday tidak tersedia dari IP ini: {e}",
-                    "Pakai OANDA (mode=live) atau jalankan di Oracle VM yang IP-nya tidak diblokir.",
+                    "Jalankan di Oracle VM (IP tidak diblokir) agar chart asli tersedia.",
                 ],
                 "spot_price": spot["price"] if spot else None,
                 "spot_updated_at": spot["updated_at"] if spot else None,
@@ -114,8 +129,8 @@ def analyze(mode: str = "demo", instrument: str = "XAU_USD") -> dict[str, Any]:
         except Exception as e:  # noqa: BLE001
             return {
                 "ok": False,
-                "mode": "real",
-                "errors": [f"Real gagal: {e}"],
+                "mode": mode,
+                "errors": [f"{mode.capitalize()} gagal: {e}"],
             }
 
     # ---- demo (default) ----
